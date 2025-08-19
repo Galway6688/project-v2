@@ -297,7 +297,21 @@ class MultimodalAgent:
         print("="*80)
         print(f"Mode: {state['mode']}")
         print(f"Question: {state['optimized_question']}")
-        print(f"Final Prompt: {state['final_prompt']}")
+
+        printable_prompt = state['final_prompt']
+        # 2. 如果存在图像数据，就用一个简短的占位符替换掉它
+        if state.get('tactile_image'):
+            printable_prompt = printable_prompt.replace(
+                state['tactile_image'], 
+                f"[TACTILE IMAGE DATA of {len(state['tactile_image'])} chars... OMITTED FOR BREVITY]"
+            )
+        if state.get('vision_image'):
+            printable_prompt = printable_prompt.replace(
+                state['vision_image'], 
+                f"[VISION IMAGE DATA of {len(state['vision_image'])} chars... OMITTED FOR BREVITY]"
+            )
+        print(f"Final Prompt: {printable_prompt}")
+
         if state["tactile_image"]:
             print(f"Tactile Image Length: {len(state['tactile_image'])} chars")
             print(f"Tactile Image Preview: {state['tactile_image'][:100]}...")
