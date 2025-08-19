@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ResponseSection = ({ response, loading }) => {
+const ResponseSection = ({ response, loading, optimizedQuestion }) => {
   return (
     <div className="bg-white rounded-xl shadow-card p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">AI Response Output</h2>
@@ -16,7 +16,27 @@ const ResponseSection = ({ response, loading }) => {
             <p className="text-gray-400 text-sm mt-1">This may take a few moments</p>
           </div>
         ) : response ? (
-          <div className="w-full">
+          <div className="w-full space-y-4">
+            {/* 显示优化后的问题 */}
+            {optimizedQuestion && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">✓</span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-medium text-gray-900 mb-2">Optimized Question</h3>
+                    <div className="prose prose-sm max-w-none">
+                      <p className="text-gray-700 whitespace-pre-wrap">{optimizedQuestion}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* 显示AI回答 */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">

@@ -77,7 +77,7 @@ async def generate_reasoning(request: ReasoningRequest):
         print(f"Vision image: {'Present' if request.vision_image else 'None'}")
         
         # Process the request through the LangGraph agent
-        response = multimodal_agent.process_request(
+        result = multimodal_agent.process_request(
             question=request.question,
             mode=request.mode,
             tactile_image=request.tactile_image,
@@ -85,8 +85,9 @@ async def generate_reasoning(request: ReasoningRequest):
         )
         
         return ReasoningResponse(
-            response=response,
-            mode=request.mode
+            response=result["response"],
+            mode=request.mode,
+            optimized_question=result["optimized_question"]
         )
         
     except HTTPException:

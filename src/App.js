@@ -13,6 +13,7 @@ function App() {
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [promptPreview, setPromptPreview] = useState('');
+  const [optimizedQuestion, setOptimizedQuestion] = useState(null);
 
   const updatePromptPreview = useCallback(() => {
     let preview = '';
@@ -80,6 +81,7 @@ function App() {
 
       console.log('✅ Backend response received:', result.data);
       setResponse(result.data.response);
+      setOptimizedQuestion(result.data.optimized_question);
     } catch (error) {
       console.error('❌ Error generating response:', error);
       console.error('Error details:', {
@@ -129,6 +131,7 @@ function App() {
     setSelectedMode('tactile');
     setResponse(null);
     setPromptPreview('');
+    setOptimizedQuestion(null);
   };
 
   return (
@@ -160,6 +163,7 @@ function App() {
         <ResponseSection 
           response={response}
           loading={loading}
+          optimizedQuestion={optimizedQuestion}
         />
       </main>
     </div>

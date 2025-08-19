@@ -383,7 +383,7 @@ class MultimodalAgent:
     
     # --- UPDATED PROCESS REQUEST METHOD ---
     def process_request(self, question: str, mode: str, tactile_image: Optional[str] = None, 
-                       vision_image: Optional[str] = None) -> str:
+                      vision_image: Optional[str] = None) -> Dict[str, str]:
         """Processes a complete multimodal reasoning request."""
         state = AgentState(
             original_question=question,
@@ -395,7 +395,10 @@ class MultimodalAgent:
             response=""
         )
         final_state = self.graph.invoke(state)
-        return final_state["response"]
+        return {
+            "response": final_state["response"],
+            "optimized_question": final_state["optimized_question"]
+        }
 
 # Global agent instance
 multimodal_agent = MultimodalAgent()
