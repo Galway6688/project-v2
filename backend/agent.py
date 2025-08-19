@@ -10,27 +10,16 @@ from prompt_templates import get_template
 from config import TOGETHER_API_KEY, TOGETHER_MODEL_NAME, TOGETHER_BASE_URL
 import re
 
-def compress_image_data(image_data: str) -> str:
-    """Compress image data to reduce token usage"""
+def normalize_image_data(image_data: str) -> str:
+    """Normalize image data format for consistency"""
     if not image_data:
         return image_data
     
-    # Remove data:image prefix if present
+    # Ensure consistent format
     if image_data.startswith('data:image'):
-        # Extract base64 data only
-        match = re.search(r'base64,(.+)', image_data)
-        if match:
-            base64_data = match.group(1)
-            # Truncate to first 1000 characters to reduce tokens
-            if len(base64_data) > 1000:
-                base64_data = base64_data[:1000] + "...[truncated]"
-            return f"data:image/jpeg;base64,{base64_data}"
-    
-    # If it's already just base64, truncate it
-    if len(image_data) > 1000:
-        image_data = image_data[:1000] + "...[truncated]"
-    
-    return image_data
+        return image_data  # Already in correct format
+    else:
+        return f"data:image/jpeg;base64,{image_data}"  # Add prefix if missing
 
 class AgentState(TypedDict):
     """State object for the LangGraph workflow"""
@@ -100,43 +89,74 @@ class MultimodalAgent:
         # Get the template based on mode
         template = get_template(state["mode"])
         
-        # Fill in the template with actual data based on mode, using compressed images
+        # PRINT TEMPLATE BUILDING PROCESS
+        print("\n" + "-"*60)
+        print("🔨 BUILDING PROMPT TEMPLATE:")
+        print("-"*60)
+        print(f"Selected Mode: {state['mode']}")
+        print(f"Template: {template}")
+        print(f"Optimized Question: {state['optimized_question']}")
+        
+        # Fill in the template with actual data based on mode, using normalized images
         if state["mode"] == "tactile":
             # For tactile mode, only pass tactile-related parameters
-            compressed_tactile = compress_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
+            normalized_tactile = normalize_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
+            print(f"Tactile Image (normalized): {len(normalized_tactile)} chars")
             final_prompt = template.format(
                 question=state["optimized_question"],
-                tactile_image=compressed_tactile
+                tactile_image=normalized_tactile
             )
         elif state["mode"] == "vision":
             # For vision mode, only pass vision-related parameters
-            compressed_vision = compress_image_data(state["vision_image"]) if state["vision_image"] else "[No visual image provided]"
+            normalized_vision = normalize_image_data(state["vision_image"]) if state["vision_image"] else "[No visual image provided]"
+            print(f"Vision Image (normalized): {len(normalized_vision)} chars")
             final_prompt = template.format(
                 question=state["optimized_question"],
-                visual_image=compressed_vision
+                visual_image=normalized_vision
             )
         elif state["mode"] == "combined":
             # For combined mode, pass both parameters
-            compressed_tactile = compress_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
-            compressed_vision = compress_image_data(state["vision_image"]) if state["vision_image"] else "[No visual image provided]"
+            normalized_tactile = normalize_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
+            normalized_vision = normalize_image_data(state["vision_image"]) if state["vision_image"] else "[No visual image provided]"
+            print(f"Tactile Image (normalized): {len(normalized_tactile)} chars")
+            print(f"Vision Image (normalized): {len(normalized_vision)} chars")
             final_prompt = template.format(
                 question=state["optimized_question"],
-                tactile_image=compressed_tactile,
-                visual_image=compressed_vision
+                tactile_image=normalized_tactile,
+                visual_image=normalized_vision
             )
         else:
             # Default to tactile mode
-            compressed_tactile = compress_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
+            normalized_tactile = normalize_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
+            print(f"Tactile Image (normalized): {len(normalized_tactile)} chars")
             final_prompt = get_template("tactile").format(
                 question=state["optimized_question"],
-                tactile_image=compressed_tactile
+                tactile_image=normalized_tactile
             )
+        
+        print(f"Final Prompt Length: {len(final_prompt)} chars")
+        print("-"*60)
         
         state["final_prompt"] = final_prompt
         return state
     
     def _llm_call_node(self, state: AgentState) -> AgentState:
         """Node 3: Call the LLM with the final prompt"""
+        
+        # PRINT PROMPT BEFORE LLM CALL
+        print("\n" + "="*80)
+        print("🚀 PROMPT BEING SENT TO LLM:")
+        print("="*80)
+        print(f"Mode: {state['mode']}")
+        print(f"Question: {state['optimized_question']}")
+        print(f"Final Prompt: {state['final_prompt']}")
+        if state["tactile_image"]:
+            print(f"Tactile Image Length: {len(state['tactile_image'])} chars")
+            print(f"Tactile Image Preview: {state['tactile_image'][:100]}...")
+        if state["vision_image"]:
+            print(f"Vision Image Length: {len(state['vision_image'])} chars")
+            print(f"Vision Image Preview: {state['vision_image'][:100]}...")
+        print("="*80)
         
         try:
             # Create messages with image data
@@ -167,6 +187,23 @@ class MultimodalAgent:
             else:
                 # Fallback to text-only if no images
                 messages = [HumanMessage(content=state["final_prompt"])]
+            
+            # PRINT MESSAGES STRUCTURE
+            print("📤 MESSAGES STRUCTURE:")
+            print(f"Number of messages: {len(messages)}")
+            for i, msg in enumerate(messages):
+                print(f"Message {i+1}: {type(msg).__name__}")
+                if hasattr(msg, 'content'):
+                    if isinstance(msg.content, list):
+                        for j, content_item in enumerate(msg.content):
+                            print(f"  Content {j+1}: {content_item['type']}")
+                            if content_item['type'] == 'text':
+                                print(f"    Text: {content_item['text'][:100]}...")
+                            elif content_item['type'] == 'image_url':
+                                print(f"    Image URL length: {len(content_item['image_url']['url'])} chars")
+                    else:
+                        print(f"  Content: {msg.content[:100]}...")
+            print("="*80)
             
             response = self.llm.invoke(messages)
             state["response"] = response.content.strip()
