@@ -44,95 +44,243 @@ class MultimodalAgent:
         self.graph = self._build_graph()
     
     def _build_graph(self) -> StateGraph:
-        """Build the LangGraph workflow"""
+        """Build the two-stage conditional routing workflow"""
         workflow = StateGraph(AgentState)
-        
-        # Add nodes
-        workflow.add_node("query_optimizer", self._query_optimizer_node)
-        workflow.add_node("prompt_builder", self._prompt_builder_node)
+
+        # ================================
+        # ADD ALL NODES
+        # ================================
+
+        # Stage 1: Query Optimizers
+        workflow.add_node("tactile_optimizer", self._tactile_query_optimizer)
+        workflow.add_node("vision_optimizer", self._vision_query_optimizer)
+        workflow.add_node("combined_optimizer", self._combined_query_optimizer)
+
+        # Stage 2: Prompt Builders
+        workflow.add_node("tactile_prompt_builder", self._tactile_prompt_builder)
+        workflow.add_node("vision_prompt_builder", self._vision_prompt_builder)
+        workflow.add_node("combined_prompt_builder", self._combined_prompt_builder)
+
+        # Final LLM Call
         workflow.add_node("llm_call", self._llm_call_node)
-        
-        # Add edges
-        workflow.add_edge(START, "query_optimizer")
-        workflow.add_edge("query_optimizer", "prompt_builder")
-        workflow.add_edge("prompt_builder", "llm_call")
+
+        # ================================
+        # WORKFLOW ROUTING STRUCTURE
+        # ================================
+
+        # Entry point: Start -> First conditional routing (Query Optimization)
+        workflow.add_conditional_edges(
+            START,
+            self._query_router,
+            {
+                "tactile_optimizer": "tactile_optimizer",
+                "vision_optimizer": "vision_optimizer",
+                "combined_optimizer": "combined_optimizer"
+            }
+        )
+
+        # First convergence: All optimizers -> Second conditional routing (Prompt Building)
+        workflow.add_conditional_edges(
+            "tactile_optimizer",
+            self._prompt_router,
+            {
+                "tactile_prompt_builder": "tactile_prompt_builder",
+                "vision_prompt_builder": "vision_prompt_builder",
+                "combined_prompt_builder": "combined_prompt_builder"
+            }
+        )
+        workflow.add_conditional_edges(
+            "vision_optimizer",
+            self._prompt_router,
+            {
+                "tactile_prompt_builder": "tactile_prompt_builder",
+                "vision_prompt_builder": "vision_prompt_builder",
+                "combined_prompt_builder": "combined_prompt_builder"
+            }
+        )
+        workflow.add_conditional_edges(
+            "combined_optimizer",
+            self._prompt_router,
+            {
+                "tactile_prompt_builder": "tactile_prompt_builder",
+                "vision_prompt_builder": "vision_prompt_builder",
+                "combined_prompt_builder": "combined_prompt_builder"
+            }
+        )
+
+        # Second convergence: All builders -> LLM Call
+        workflow.add_edge("tactile_prompt_builder", "llm_call")
+        workflow.add_edge("vision_prompt_builder", "llm_call")
+        workflow.add_edge("combined_prompt_builder", "llm_call")
+
+        # Exit point: LLM Call -> End
         workflow.add_edge("llm_call", END)
-        
+
         return workflow.compile()
-    
-    def _query_optimizer_node(self, state: AgentState) -> AgentState:
-        """Node 1: Optimize the user's question for better multimodal reasoning"""
-        
-        # SIMPLIFIED VERSION: Basic question optimization
-        system_prompt = "Optimize this question for AI analysis. Return only the improved question."
-        
+
+    # ================================
+    # QUERY OPTIMIZATION NODES (Stage 1)
+    # ================================
+
+    def _query_router(self, state: AgentState) -> str:
+        """Route to appropriate query optimizer based on mode"""
+        mode_to_optimizer = {
+            "tactile": "tactile_optimizer",
+            "vision": "vision_optimizer",
+            "combined": "combined_optimizer"
+        }
+        return mode_to_optimizer.get(state["mode"], "tactile_optimizer")
+
+    def _tactile_query_optimizer(self, state: AgentState) -> AgentState:
+        """Optimize questions for tactile analysis"""
+        system_prompt = "Act as a haptics specialist. Refine the user's question to probe tactile properties (texture, hardness, friction, thermal) of a surface from the SSVTP database. Return ONLY the refined question."
+
         user_prompt = f"Question: {state['original_question']}"
-        
+
         messages = [
             SystemMessage(content=system_prompt),
             HumanMessage(content=user_prompt)
         ]
-        
+
         try:
             response = self.llm.invoke(messages)
             state["optimized_question"] = response.content.strip()
         except Exception as e:
-            print(f"Error in query optimization: {e}")
-            # Fallback to original question if optimization fails
+            print(f"Error in tactile query optimization: {e}")
             state["optimized_question"] = state["original_question"]
-        
+
         return state
-    
-    def _prompt_builder_node(self, state: AgentState) -> AgentState:
-        """Node 2: Build the final prompt using the appropriate few-shot template"""
-        
-        # Get the template based on mode
-        template = get_template(state["mode"])
-        
+
+    def _vision_query_optimizer(self, state: AgentState) -> AgentState:
+        """Optimize questions for vision analysis"""
+        system_prompt = "Act as a computer vision expert. Refine the user's question to analyze visual characteristics (color, pattern, sheen, inferred texture) of a surface from the SSVTP database. Return ONLY the refined question."
+
+        user_prompt = f"Question: {state['original_question']}"
+
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_prompt)
+        ]
+
+        try:
+            response = self.llm.invoke(messages)
+            state["optimized_question"] = response.content.strip()
+        except Exception as e:
+            print(f"Error in vision query optimization: {e}")
+            state["optimized_question"] = state["original_question"]
+
+        return state
+
+    def _combined_query_optimizer(self, state: AgentState) -> AgentState:
+        """Optimize questions for combined multimodal analysis"""
+        system_prompt = "Act as a multimodal reasoning expert. Refine the user's question to explore the synergy between visual and tactile data of a surface from the SSVTP database, connecting appearance with physical sensations. Return ONLY the refined question."
+
+        user_prompt = f"Question: {state['original_question']}"
+
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_prompt)
+        ]
+
+        try:
+            response = self.llm.invoke(messages)
+            state["optimized_question"] = response.content.strip()
+        except Exception as e:
+            print(f"Error in combined query optimization: {e}")
+            state["optimized_question"] = state["original_question"]
+
+        return state
+
+    # ================================
+    # PROMPT BUILDING NODES (Stage 2)
+    # ================================
+
+    def _prompt_router(self, state: AgentState) -> str:
+        """Route to appropriate prompt builder based on mode"""
+        mode_to_builder = {
+            "tactile": "tactile_prompt_builder",
+            "vision": "vision_prompt_builder",
+            "combined": "combined_prompt_builder"
+        }
+        return mode_to_builder.get(state["mode"], "tactile_prompt_builder")
+
+    def _tactile_prompt_builder(self, state: AgentState) -> AgentState:
+        """Build prompt specifically for tactile analysis"""
+        template = get_template("tactile")
+
         # PRINT TEMPLATE BUILDING PROCESS
         print("\n" + "-"*60)
-        print("🔨 BUILDING PROMPT TEMPLATE:")
+        print("🔨 BUILDING TACTILE PROMPT TEMPLATE:")
         print("-"*60)
         print(f"Selected Mode: {state['mode']}")
         print(f"Template: {template}")
         print(f"Optimized Question: {state['optimized_question']}")
-        
-        # Fill in the template with actual data based on mode, using normalized images
-        if state["mode"] == "tactile":
-            # For tactile mode, only pass tactile-related parameters
-            normalized_tactile = normalize_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
-            print(f"Tactile Image (normalized): {len(normalized_tactile)} chars")
-            final_prompt = template.format(
-                question=state["optimized_question"],
-                tactile_image=normalized_tactile
-            )
-        elif state["mode"] == "vision":
-            # For vision mode, only pass vision-related parameters
-            normalized_vision = normalize_image_data(state["vision_image"]) if state["vision_image"] else "[No visual image provided]"
-            print(f"Vision Image (normalized): {len(normalized_vision)} chars")
-            final_prompt = template.format(
-                question=state["optimized_question"],
-                visual_image=normalized_vision
-            )
-        elif state["mode"] == "combined":
-            # For combined mode, pass both parameters
-            normalized_tactile = normalize_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
-            normalized_vision = normalize_image_data(state["vision_image"]) if state["vision_image"] else "[No visual image provided]"
-            print(f"Tactile Image (normalized): {len(normalized_tactile)} chars")
-            print(f"Vision Image (normalized): {len(normalized_vision)} chars")
-            final_prompt = template.format(
-                question=state["optimized_question"],
-                tactile_image=normalized_tactile,
-                visual_image=normalized_vision
-            )
-        else:
-            # Default to tactile mode
-            normalized_tactile = normalize_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
-            print(f"Tactile Image (normalized): {len(normalized_tactile)} chars")
-            final_prompt = get_template("tactile").format(
-                question=state["optimized_question"],
-                tactile_image=normalized_tactile
-            )
+
+        # For tactile mode, only pass tactile-related parameters
+        normalized_tactile = normalize_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
+        print(f"Tactile Image (normalized): {len(normalized_tactile)} chars")
+
+        final_prompt = template.format(
+            question=state["optimized_question"],
+            tactile_image=normalized_tactile
+        )
+
+        print(f"Final Prompt Length: {len(final_prompt)} chars")
+        print("-"*60)
+
+        state["final_prompt"] = final_prompt
+        return state
+
+    def _vision_prompt_builder(self, state: AgentState) -> AgentState:
+        """Build prompt specifically for vision analysis"""
+        template = get_template("vision")
+
+        # PRINT TEMPLATE BUILDING PROCESS
+        print("\n" + "-"*60)
+        print("🔨 BUILDING VISION PROMPT TEMPLATE:")
+        print("-"*60)
+        print(f"Selected Mode: {state['mode']}")
+        print(f"Template: {template}")
+        print(f"Optimized Question: {state['optimized_question']}")
+
+        # For vision mode, only pass vision-related parameters
+        normalized_vision = normalize_image_data(state["vision_image"]) if state["vision_image"] else "[No visual image provided]"
+        print(f"Vision Image (normalized): {len(normalized_vision)} chars")
+
+        final_prompt = template.format(
+            question=state["optimized_question"],
+            visual_image=normalized_vision
+        )
+
+        print(f"Final Prompt Length: {len(final_prompt)} chars")
+        print("-"*60)
+
+        state["final_prompt"] = final_prompt
+        return state
+
+    def _combined_prompt_builder(self, state: AgentState) -> AgentState:
+        """Build prompt for combined multimodal analysis"""
+        template = get_template("combined")
+
+        # PRINT TEMPLATE BUILDING PROCESS
+        print("\n" + "-"*60)
+        print("🔨 BUILDING COMBINED PROMPT TEMPLATE:")
+        print("-"*60)
+        print(f"Selected Mode: {state['mode']}")
+        print(f"Template: {template}")
+        print(f"Optimized Question: {state['optimized_question']}")
+
+        # For combined mode, pass both parameters
+        normalized_tactile = normalize_image_data(state["tactile_image"]) if state["tactile_image"] else "[No tactile image provided]"
+        normalized_vision = normalize_image_data(state["vision_image"]) if state["vision_image"] else "[No visual image provided]"
+        print(f"Tactile Image (normalized): {len(normalized_tactile)} chars")
+        print(f"Vision Image (normalized): {len(normalized_vision)} chars")
+
+        final_prompt = template.format(
+            question=state["optimized_question"],
+            tactile_image=normalized_tactile,
+            visual_image=normalized_vision
+        )
         
         print(f"Final Prompt Length: {len(final_prompt)} chars")
         print("-"*60)
