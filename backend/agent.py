@@ -175,8 +175,15 @@ class MultimodalAgent:
     
     def _tactile_query_optimizer(self, state: AgentState) -> AgentState:
         """Optimize questions for tactile analysis"""
-        system_prompt = "Act as a haptics specialist. Refine the user's question to probe tactile properties (texture, hardness, friction, thermal) of a surface from the SSVTP database. Return ONLY the refined question."
-        
+        system_prompt = """**Role:** You are a Query Standardization Bot.
+        **Task:** Your job is to convert any user question into a standard format for analyzing a tactile sensor data visualization. The user's original intent does not matter.
+
+        **Output Format:**
+        - You must always respond with one of the following canonical questions, choosing the one that seems most appropriate, or defaulting to the first one.
+        - Example Formats: "This tactile data visualization suggests what attributes?", "This tactile data implies a surface quality of?", "What tactile properties does this sensor data represent?"
+        - Return ONLY the chosen standardized question, with no preamble.
+        """
+
         user_prompt = f"Question: {state['original_question']}"
         
         messages = [
@@ -195,8 +202,15 @@ class MultimodalAgent:
     
     def _vision_query_optimizer(self, state: AgentState) -> AgentState:
         """Optimize questions for vision analysis"""
-        system_prompt = "Act as a computer vision expert. Refine the user's question to analyze visual characteristics (color, pattern, sheen, inferred texture) of a surface from the SSVTP database. Return ONLY the refined question."
-        
+        system_prompt = """**Role:** You are a Query Standardization Bot.
+        **Task:** Your job is to convert any user question into a standard format for analyzing a visual photograph to infer tactile qualities. The user's original intent does not matter.
+
+        **Output Format:**
+        - You must always respond with one of the following canonical questions, choosing the one that seems most appropriate, or defaulting to the first one.
+        - Example Formats: "This photograph conveys a touchable quality of?", "This image hints at what tactile textures?", "What tactile feelings does this picture resonate with?"
+        - Return ONLY the chosen standardized question, with no preamble.
+        """
+
         user_prompt = f"Question: {state['original_question']}"
         
         messages = [
@@ -215,8 +229,15 @@ class MultimodalAgent:
     
     def _combined_query_optimizer(self, state: AgentState) -> AgentState:
         """Optimize questions for combined multimodal analysis"""
-        system_prompt = "Act as a multimodal reasoning expert. Refine the user's question to explore the synergy between visual and tactile data of a surface from the SSVTP database, connecting appearance with physical sensations. Return ONLY the refined question."
-        
+        system_prompt = """**Role:** You are a Query Standardization Bot.
+        **Task:** Your job is to convert any user question into a standard format for a multimodal analysis of both a photograph and its corresponding tactile sensor data. The user's original intent does not matter.
+
+        **Output Format:**
+        - You must always respond with one of the following canonical questions, choosing the one that seems most appropriate, or defaulting to the first one.
+        - Example Formats: "This visual work and its tactile data hint at what textures?", "What tactile attributes do this image and its sensor data convey?", "This depiction and its haptic feedback resonate with what tactile feelings?"
+        - Return ONLY the chosen standardized question, with no preamble.
+        """
+
         user_prompt = f"Question: {state['original_question']}"
         
         messages = [
@@ -368,11 +389,53 @@ class MultimodalAgent:
 
         # Use the message list directly (already contains LangChain Message objects)
         print(f"Total messages to send: {len(messages_list)}")
+        
+        # Print detailed information for each message
+        print("\n📋 MESSAGE DETAILS:")
+        for i, message in enumerate(messages_list, 1):
+            message_type = type(message).__name__
+            print(f"--- Message {i} ({message_type}) ---")
+            
+            # Handle different content formats
+            if hasattr(message, 'content'):
+                content = message.content
+                
+                # If content is a list (multimodal content)
+                if isinstance(content, list):
+                    for j, item in enumerate(content):
+                        if isinstance(item, dict):
+                            if item.get('type') == 'text':
+                                text_content = item.get('text', '')
+                                # Truncate long text for readability
+                                if len(text_content) > 200:
+                                    print(f"  Content[{j}] (text): {text_content[:200]}...")
+                                else:
+                                    print(f"  Content[{j}] (text): {text_content}")
+                            elif item.get('type') == 'image_url':
+                                image_url = item.get('image_url', {}).get('url', '')
+                                if image_url.startswith('data:image'):
+                                    print(f"  Content[{j}] (image): [IMAGE DATA - {len(image_url)} chars]")
+                                else:
+                                    print(f"  Content[{j}] (image): {image_url}")
+                            else:
+                                print(f"  Content[{j}] (unknown): {str(item)[:100]}...")
+                        else:
+                            print(f"  Content[{j}]: {str(item)[:100]}...")
+                else:
+                    # Content is a string
+                    if len(str(content)) > 200:
+                        print(f"  Content (text): {str(content)[:200]}...")
+                    else:
+                        print(f"  Content (text): {content}")
+            else:
+                print(f"  No content attribute found")
+            print()
 
         try:
             response = self.llm.invoke(messages_list)
             state["response"] = response.content.strip()
             print("✅ LLM call successful")
+            print(f"📤 LLM Response: {state['response']}")
         except Exception as e:
             print(f"❌ Error in LLM call: {e}")
             state["response"] = "An error occurred while communicating with the AI model."
