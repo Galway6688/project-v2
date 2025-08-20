@@ -7,11 +7,11 @@ from typing import Dict, Any, Optional, TypedDict, List
 from langgraph.graph import StateGraph, START, END
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
-# Import the new template variables
+# Import the template variables
 from prompt_templates import (
-    FEW_SHOT_EXAMPLE_TACTILE_TEXT, TASK_PROMPT_TACTILE,
-    FEW_SHOT_EXAMPLE_VISION_TEXT, TASK_PROMPT_VISION,
-    FEW_SHOT_EXAMPLE_COMBINED_TEXT, TASK_PROMPT_COMBINED
+    TASK_PROMPT_TACTILE,
+    TASK_PROMPT_VISION,
+    TASK_PROMPT_COMBINED
 )
 from config import TOGETHER_API_KEY, TOGETHER_MODEL_NAME, TOGETHER_BASE_URL
 import re
@@ -77,12 +77,36 @@ class MultimodalAgent:
             model=TOGETHER_MODEL_NAME,
             temperature=0.7
         )
-        # --- NEW DICTIONARY FOR EXAMPLE ASSETS ---
-        # Assumes an 'assets' folder exists in the same directory as this script.
-        self.example_assets = {
-            "vision_example": os.path.join("assets", "image_2355_rgb.jpg"),
-            "tactile_example": os.path.join("assets", "image_2355_tac.jpg"),
-        }
+        # --- HARDCODED 5-SHOT EXAMPLES ---
+        # Based on the user-provided file list and train.csv
+        # Assumes 'images_rgb' and 'images_tac' folders are in the same directory as the script.
+        self.few_shot_examples = [
+            {
+                "vision_path": "images_rgb/image_2_rgb.jpg",
+                "tactile_path": "images_tac/image_2_tac.jpg",
+                "caption": "fabric, grainy"
+            },
+            {
+                "vision_path": "images_rgb/image_1082_rgb.jpg",
+                "tactile_path": "images_tac/image_1082_tac.jpg",
+                "caption": "flat, hard"
+            },
+            {
+                "vision_path": "images_rgb/image_2355_rgb.jpg",
+                "tactile_path": "images_tac/image_2355_tac.jpg",
+                "caption": "fabric, lined"
+            },
+            {
+                "vision_path": "images_rgb/image_3393_rgb.jpg",
+                "tactile_path": "images_tac/image_3393_tac.jpg",
+                "caption": "smooth, fabric"
+            },
+            {
+                "vision_path": "images_rgb/image_4257_rgb.jpg",
+                "tactile_path": "images_tac/image_4257_tac.jpg",
+                "caption": "shiny, woven"
+            }
+        ]
         self.graph = self._build_graph()
     
     def _build_graph(self) -> StateGraph:
@@ -268,95 +292,118 @@ class MultimodalAgent:
         return mode_to_builder.get(state["mode"], "tactile_prompt_builder")
     
     def _tactile_prompt_builder(self, state: AgentState) -> AgentState:
-        """Builds the tactile analysis message with separated messages for each image."""
-        print("🔨 BUILDING TACTILE MESSAGE WITH FEW-SHOT IMAGE:")
-        example_image_b64 = image_to_base64(self.example_assets["tactile_example"])
+        """Builds the tactile analysis message with a fixed 5-shot prompt."""
+        print("🔨 BUILDING TACTILE MESSAGE WITH 5-SHOT EXAMPLES:")
+        
+        messages_list = []
+
+        # 1. Loop through all fixed few-shot examples
+        for example in self.few_shot_examples:
+            example_image_b64 = image_to_base64(example["tactile_path"])
+            if not example_image_b64:
+                print(f"Warning: Skipping missing example image at {example['tactile_path']}")
+                continue
+
+            # Example User Turn (Image + generic question)
+            example_content = [
+                {"type": "text", "text": "What are the tactile properties?"},
+                {"type": "image_url", "image_url": {"url": example_image_b64}}
+            ]
+            messages_list.append(HumanMessage(content=example_content))
+
+            # Example AI Turn (Correct answer)
+            messages_list.append(SystemMessage(content=example["caption"]))
+        
+        # 2. Add the actual user query at the end
         user_image_b64 = state["tactile_image"]
         task_prompt = TASK_PROMPT_TACTILE.format(question=state["optimized_question"])
 
-        messages_list = []
-        
-        # Message 1: Example User Turn (Question + Image)
-        example_content = [{"type": "text", "text": "Based on the tactile data, what is this material and what are its key properties?"}]
-        if example_image_b64:
-            example_content.append({"type": "image_url", "image_url": {"url": example_image_b64}})
-        messages_list.append(HumanMessage(content=example_content))
-        
-        # Message 2: Example AI Turn (Answer)
-        messages_list.append(SystemMessage(content=FEW_SHOT_EXAMPLE_TACTILE_TEXT))
-
-        # Message 3: Real User Turn (Instructions + Image)
         task_content = [{"type": "text", "text": task_prompt}]
         if user_image_b64:
             task_content.append({"type": "image_url", "image_url": {"url": user_image_b64}})
         messages_list.append(HumanMessage(content=task_content))
 
         state["messages"] = messages_list
-        print(f"Built {len(messages_list)} separate messages")
+        print(f"Built {len(messages_list)} separate messages for the final prompt.")
         return state
 
     def _vision_prompt_builder(self, state: AgentState) -> AgentState:
-        """Builds the vision analysis message with separated messages for each image."""
-        print("🔨 BUILDING VISION MESSAGE WITH FEW-SHOT IMAGE:")
-        example_image_b64 = image_to_base64(self.example_assets["vision_example"])
+        """Builds the vision analysis message with a fixed 5-shot prompt."""
+        print("🔨 BUILDING VISION MESSAGE WITH 5-SHOT EXAMPLES:")
+        
+        messages_list = []
+
+        # 1. Loop through all fixed few-shot examples
+        for example in self.few_shot_examples:
+            example_image_b64 = image_to_base64(example["vision_path"])
+            if not example_image_b64:
+                print(f"Warning: Skipping missing example image at {example['vision_path']}")
+                continue
+
+            # Example User Turn (Image + generic question)
+            example_content = [
+                {"type": "text", "text": "From this image, what would the surface feel like?"},
+                {"type": "image_url", "image_url": {"url": example_image_b64}}
+            ]
+            messages_list.append(HumanMessage(content=example_content))
+
+            # Example AI Turn (Correct answer)
+            messages_list.append(SystemMessage(content=example["caption"]))
+        
+        # 2. Add the actual user query at the end
         user_image_b64 = state["vision_image"]
         task_prompt = TASK_PROMPT_VISION.format(question=state["optimized_question"])
 
-        messages_list = []
-        
-        # Message 1: Example User Turn (Question + Image)
-        example_content = [{"type": "text", "text": "From this image, what would the surface feel like?"}]
-        if example_image_b64:
-            example_content.append({"type": "image_url", "image_url": {"url": example_image_b64}})
-        messages_list.append(HumanMessage(content=example_content))
-        
-        # Message 2: Example AI Turn (Answer)
-        messages_list.append(SystemMessage(content=FEW_SHOT_EXAMPLE_VISION_TEXT))
-
-        # Message 3: Real User Turn (Instructions + Image)
         task_content = [{"type": "text", "text": task_prompt}]
         if user_image_b64:
             task_content.append({"type": "image_url", "image_url": {"url": user_image_b64}})
         messages_list.append(HumanMessage(content=task_content))
 
         state["messages"] = messages_list
-        print(f"Built {len(messages_list)} separate messages")
+        print(f"Built {len(messages_list)} separate messages for the final prompt.")
         return state
 
     def _combined_prompt_builder(self, state: AgentState) -> AgentState:
-        """Builds the combined analysis message with separated messages for multiple images."""
-        print("🔨 BUILDING COMBINED MESSAGE WITH FEW-SHOT IMAGES:")
-        example_vision_b64 = image_to_base64(self.example_assets["vision_example"])
-        example_tactile_b64 = image_to_base64(self.example_assets["tactile_example"])
-        user_vision_b64 = state["vision_image"]
-        user_tactile_b64 = state["tactile_image"]
-        task_prompt = TASK_PROMPT_COMBINED.format(question=state["optimized_question"])
+        """Builds the combined analysis message with a fixed 5-shot prompt."""
+        print("🔨 BUILDING COMBINED MESSAGE WITH 5-SHOT EXAMPLES:")
         
         messages_list = []
-        
-        # Message 1: Example User Turn with Vision Image
-        if example_vision_b64:
+
+        # 1. Loop through all fixed few-shot examples
+        for example in self.few_shot_examples:
+            example_vision_b64 = image_to_base64(example["vision_path"])
+            example_tactile_b64 = image_to_base64(example["tactile_path"])
+            
+            if not example_vision_b64 or not example_tactile_b64:
+                print(f"Warning: Skipping missing example images at {example['vision_path']} or {example['tactile_path']}")
+                continue
+
+            # Example User Turn with Vision Image
             example_vision_content = [
                 {"type": "text", "text": "Identify this material and describe its characteristics. Here is the visual image:"},
                 {"type": "image_url", "image_url": {"url": example_vision_b64}}
             ]
             messages_list.append(HumanMessage(content=example_vision_content))
-        
-        # Message 2: Example User Turn with Tactile Image
-        if example_tactile_b64:
+            
+            # Example User Turn with Tactile Image
             example_tactile_content = [
                 {"type": "text", "text": "And here is the tactile data for the same material:"},
                 {"type": "image_url", "image_url": {"url": example_tactile_b64}}
             ]
             messages_list.append(HumanMessage(content=example_tactile_content))
-        
-        # Message 3: Example AI Turn (Answer)
-        messages_list.append(SystemMessage(content=FEW_SHOT_EXAMPLE_COMBINED_TEXT))
 
-        # Message 4: Real User Turn with Task Instructions
+            # Example AI Turn (Correct answer)
+            messages_list.append(SystemMessage(content=example["caption"]))
+        
+        # 2. Add the actual user query at the end
+        user_vision_b64 = state["vision_image"]
+        user_tactile_b64 = state["tactile_image"]
+        task_prompt = TASK_PROMPT_COMBINED.format(question=state["optimized_question"])
+
+        # Real User Turn with Task Instructions
         messages_list.append(HumanMessage(content=[{"type": "text", "text": task_prompt}]))
         
-        # Message 5: User Vision Image (if available)
+        # User Vision Image (if available)
         if user_vision_b64:
             user_vision_content = [
                 {"type": "text", "text": "Here is the visual image to analyze:"},
@@ -364,16 +411,16 @@ class MultimodalAgent:
             ]
             messages_list.append(HumanMessage(content=user_vision_content))
         
-        # Message 6: User Tactile Image (if available)
+        # User Tactile Image (if available)
         if user_tactile_b64:
             user_tactile_content = [
                 {"type": "text", "text": "And here is the tactile data:"},
                 {"type": "image_url", "image_url": {"url": user_tactile_b64}}
             ]
             messages_list.append(HumanMessage(content=user_tactile_content))
-            
+
         state["messages"] = messages_list
-        print(f"Built {len(messages_list)} separate messages")
+        print(f"Built {len(messages_list)} separate messages for the final prompt.")
         return state
     
     # --- SIMPLIFIED LLM CALL NODE ---

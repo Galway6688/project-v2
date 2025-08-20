@@ -94,8 +94,6 @@ of a comma-separated list of adjectives as seen in finetune.json.
 """
 
 # --- TACTILE MODE ---
-# The example answer is concise and keyword-focused.
-FEW_SHOT_EXAMPLE_TACTILE_TEXT = "fabric, lined"
 
 # The instructions now explicitly state that the input is a SENSOR DATA VISUALIZATION.
 TASK_PROMPT_TACTILE = """**Role:** You are an expert haptic data interpreter.
@@ -112,8 +110,6 @@ TASK_PROMPT_TACTILE = """**Role:** You are an expert haptic data interpreter.
 
 
 # --- VISION MODE ---
-# The example answer reflects a real-world object from the provided images.
-FEW_SHOT_EXAMPLE_VISION_TEXT = "fabric, lined"
 
 # The instructions guide the AI to focus on the main subject in potentially complex images.
 TASK_PROMPT_VISION = """**Role:** You are an expert visual observer who infers tactile properties from photographs.
@@ -130,8 +126,6 @@ TASK_PROMPT_VISION = """**Role:** You are an expert visual observer who infers t
 
 
 # --- COMBINED MODE ---
-# The example answer explicitly models the correlation between a visual object and its tactile data.
-FEW_SHOT_EXAMPLE_COMBINED_TEXT = "fabric, lined"
 
 # The instructions are highly specific, demanding the AI to link the RGB photo to the TAC data visualization.
 TASK_PROMPT_COMBINED = """**Role:** You are an expert multimodal analyst, skilled at correlating visual photographs with abstract sensor data.
