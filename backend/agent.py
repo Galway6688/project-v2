@@ -80,10 +80,8 @@ class MultimodalAgent:
         # --- NEW DICTIONARY FOR EXAMPLE ASSETS ---
         # Assumes an 'assets' folder exists in the same directory as this script.
         self.example_assets = {
-            "tactile_sandpaper": os.path.join("assets", "example_sandpaper_tactile.jpg"),
-            "vision_marble": os.path.join("assets", "example_marble_vision.jpg"),
-            "vision_corduroy": os.path.join("assets", "example_corduroy_vision.jpg"),
-            "tactile_corduroy": os.path.join("assets", "example_corduroy_tactile.jpg"),
+            "vision_example": os.path.join("assets", "image_2355_rgb.jpg"),
+            "tactile_example": os.path.join("assets", "image_2355_tac.jpg"),
         }
         self.graph = self._build_graph()
     
@@ -251,7 +249,7 @@ class MultimodalAgent:
     def _tactile_prompt_builder(self, state: AgentState) -> AgentState:
         """Builds the tactile analysis message with separated messages for each image."""
         print("🔨 BUILDING TACTILE MESSAGE WITH FEW-SHOT IMAGE:")
-        example_image_b64 = image_to_base64(self.example_assets["tactile_sandpaper"])
+        example_image_b64 = image_to_base64(self.example_assets["tactile_example"])
         user_image_b64 = state["tactile_image"]
         task_prompt = TASK_PROMPT_TACTILE.format(question=state["optimized_question"])
 
@@ -279,7 +277,7 @@ class MultimodalAgent:
     def _vision_prompt_builder(self, state: AgentState) -> AgentState:
         """Builds the vision analysis message with separated messages for each image."""
         print("🔨 BUILDING VISION MESSAGE WITH FEW-SHOT IMAGE:")
-        example_image_b64 = image_to_base64(self.example_assets["vision_marble"])
+        example_image_b64 = image_to_base64(self.example_assets["vision_example"])
         user_image_b64 = state["vision_image"]
         task_prompt = TASK_PROMPT_VISION.format(question=state["optimized_question"])
 
@@ -307,8 +305,8 @@ class MultimodalAgent:
     def _combined_prompt_builder(self, state: AgentState) -> AgentState:
         """Builds the combined analysis message with separated messages for multiple images."""
         print("🔨 BUILDING COMBINED MESSAGE WITH FEW-SHOT IMAGES:")
-        example_vision_b64 = image_to_base64(self.example_assets["vision_corduroy"])
-        example_tactile_b64 = image_to_base64(self.example_assets["tactile_corduroy"])
+        example_vision_b64 = image_to_base64(self.example_assets["vision_example"])
+        example_tactile_b64 = image_to_base64(self.example_assets["tactile_example"])
         user_vision_b64 = state["vision_image"]
         user_tactile_b64 = state["tactile_image"]
         task_prompt = TASK_PROMPT_COMBINED.format(question=state["optimized_question"])
