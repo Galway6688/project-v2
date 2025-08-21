@@ -1,0 +1,6 @@
+url,tactile,caption
+images_rgb/image_437_rgb.jpg,images_tac/image_437_tac.jpg,"smooth, glossy, patterned"
+images_rgb/image_4210_rgb.jpg,images_tac/image_4210_tac.jpg,"flat, lined, hard"
+images_rgb/image_3312_rgb.jpg,images_tac/image_3312_tac.jpg,"fabric, coarse, deformable"
+images_rgb/image_3131_rgb.jpg,images_tac/image_3131_tac.jpg,"sewn, coarse, fabric, deformable"
+images_rgb/image_3881_rgb.jpg,images_tac/image_3881_tac.jpg,"flimsy, glossy, sewn"
