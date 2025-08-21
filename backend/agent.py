@@ -86,29 +86,29 @@ class MultimodalAgent:
             # Assumes 'images_rgb' and 'images_tac' folders are in the same directory as the script.
             self.few_shot_examples = [
                 {
-                    "vision_path": "images_rgb/image_2_rgb.jpg",
-                    "tactile_path": "images_tac/image_2_tac.jpg",
-                    "caption": "fabric, grainy"
+                    "vision_path": "images_rgb/image_2101_rgb.jpg",
+                    "tactile_path": "images_tac/image_2101_tac.jpg",
+                    "caption": "lined, woven, patterned"
                 },
                 {
-                    "vision_path": "images_rgb/image_1082_rgb.jpg",
-                    "tactile_path": "images_tac/image_1082_tac.jpg",
-                    "caption": "flat, hard"
+                    "vision_path": "images_rgb/image_143_rgb.jpg",
+                    "tactile_path": "images_tac/image_143_tac.jpg",
+                    "caption": "hard, splotchy, glossy"
                 },
                 {
-                    "vision_path": "images_rgb/image_2355_rgb.jpg",
-                    "tactile_path": "images_tac/image_2355_tac.jpg",
-                    "caption": "fabric, lined"
+                    "vision_path": "images_rgb/image_856_rgb.jpg",
+                    "tactile_path": "images_tac/image_856_tac.jpg",
+                    "caption": "absorbent, fluffy"
                 },
                 {
-                    "vision_path": "images_rgb/image_3393_rgb.jpg",
-                    "tactile_path": "images_tac/image_3393_tac.jpg",
-                    "caption": "smooth, fabric"
+                    "vision_path": "images_rgb/image_871_rgb.jpg",
+                    "tactile_path": "images_tac/image_871_tac.jpg",
+                    "caption": "metallic, rigid"
                 },
                 {
-                    "vision_path": "images_rgb/image_4257_rgb.jpg",
-                    "tactile_path": "images_tac/image_4257_tac.jpg",
-                    "caption": "shiny, woven"
+                    "vision_path": "images_rgb/image_2492_rgb.jpg",
+                    "tactile_path": "images_tac/image_2492_tac.jpg",
+                    "caption": "mesh, flexible, coarse"
                 }
             ]
     
@@ -376,6 +376,8 @@ class MultimodalAgent:
         print(f"Built {len(messages_list)} separate messages for the final prompt.")
         return state
 
+    # 请用这个修正版的函数，替换您 agent.py 中现有的 _combined_prompt_builder
+
     def _combined_prompt_builder(self, state: AgentState) -> AgentState:
         """
         Builds the combined analysis message.
@@ -402,7 +404,7 @@ class MultimodalAgent:
                 ]
                 messages_list.append(HumanMessage(content=content_part1))
 
-                # Message 2: 第二张图 (触感)
+                # Message 2: 提示语和第二张图 (触感)
                 content_part2 = [
                     {"type": "text", "text": "Here is the corresponding tactile data:"},
                     {"type": "image_url", "image_url": {"url": example_tactile_b64}}
