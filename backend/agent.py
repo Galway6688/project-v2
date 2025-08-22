@@ -70,7 +70,7 @@ class AgentState(TypedDict):
 class MultimodalAgent:
     """LangGraph agent for multimodal reasoning."""
     
-    def __init__(self, num_shots: int = 5):
+    def __init__(self, num_shots: int = 4, base_image_path: str = "."):
         self.llm = ChatOpenAI(
             api_key=TOGETHER_API_KEY,
             base_url=TOGETHER_BASE_URL,
@@ -302,7 +302,8 @@ class MultimodalAgent:
 
         # 1. Loop through all fixed few-shot examples (only if num_shots > 0)
         if self.num_shots > 0:
-            for example in self.few_shot_examples:
+            examples_to_use = self.few_shot_examples[:self.num_shots]
+            for example in examples_to_use:  # <-- 改为遍历切片后的列表
                 # For each example, use the standard, strengthened TASK_PROMPT as the instruction
                 # The 'question' field can be a generic placeholder since it's just an example
                 example_prompt_text = TASK_PROMPT_TACTILE.format(question="Analyze the following example.")
@@ -343,7 +344,8 @@ class MultimodalAgent:
 
         # 1. Loop through all fixed few-shot examples (only if num_shots > 0)
         if self.num_shots > 0:
-            for example in self.few_shot_examples:
+            examples_to_use = self.few_shot_examples[:self.num_shots]
+            for example in examples_to_use:  # <-- 改为遍历切片后的列表
                 # For each example, use the standard, strengthened TASK_PROMPT as the instruction
                 # The 'question' field can be a generic placeholder since it's just an example
                 example_prompt_text = TASK_PROMPT_VISION.format(question="Analyze the following example.")
@@ -389,7 +391,8 @@ class MultimodalAgent:
 
         # 1. Loop through all fixed few-shot examples
         if self.num_shots > 0:
-            for example in self.few_shot_examples:
+            examples_to_use = self.few_shot_examples[:self.num_shots]
+            for example in examples_to_use:  # <-- 改为遍历切片后的列表
                 example_prompt_text = TASK_PROMPT_COMBINED.format(question="Analyze the following example.")
 
                 example_vision_b64 = image_to_base64(example["vision_path"])

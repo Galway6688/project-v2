@@ -26,9 +26,9 @@ def run_predictions_only():
         print(f"Error: {TEST_CSV_PATH} not found. Please ensure it's in the same directory.")
         return
 
-    print("Initializing agents (0-shot baseline and 5-shot agent)...")
+    print("Initializing agents (0-shot baseline and 4-shot agent)...")  # <-- 修改日志文本
     baseline_agent = MultimodalAgent(num_shots=0)
-    five_shot_agent = MultimodalAgent(num_shots=5)
+    five_shot_agent = MultimodalAgent(num_shots=4)  # <-- 将这里的 5 改为 4
     print("Agents initialized.\n")
 
     print("--- Step 2: Running Predictions for all modes ---")
@@ -76,8 +76,7 @@ def run_predictions_only():
                     "five_shot_output": "ERROR"
                 })
 
-            # 为避免API速率超限，每次调用后暂停一小段时间
-            time.sleep(1)
+
 
     results_df = pd.DataFrame(all_results)
     results_df.to_csv(RAW_OUTPUT_CSV, index=False, encoding='utf-8-sig')

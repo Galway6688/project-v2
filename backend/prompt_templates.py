@@ -11,6 +11,7 @@ TASK_PROMPT_TACTILE = """**Role:** You are an expert haptic data interpreter.
 
 **Output Format Requirements:**
 - You **must** only provide your answer as a comma-separated list of descriptive adjectives.
+- **Focus only on the 5 most essential tactile attributes.
 - **DO NOT** write full sentences, explanations, or any introductory text.
 - Your output **must** strictly match the format shown in the examples.
 
@@ -25,6 +26,7 @@ TASK_PROMPT_VISION = """**Role:** You are an expert visual observer who infers t
 
 **Output Format Requirements:**
 - You **must** only provide your answer as a comma-separated list of descriptive adjectives.
+- **Focus only on the 5 most essential tactile attributes.
 - **DO NOT** write full sentences, explanations, or any introductory text.
 - Your output **must** strictly match the format shown in the examples.
 
@@ -39,6 +41,7 @@ TASK_PROMPT_COMBINED = """**Role:** You are an expert multimodal analyst, skille
 
 **Output Format Requirements:**
 - You **must** only provide your answer as a comma-separated list of descriptive adjectives.
+- **Focus only on the 5 most essential tactile attributes.
 - **DO NOT** write full sentences, explanations, or any introductory text.
 - Your output **must** strictly match the format shown in the examples.
 
