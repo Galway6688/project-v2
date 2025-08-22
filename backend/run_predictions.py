@@ -10,7 +10,7 @@ from agent import MultimodalAgent, image_to_base64
 
 # --- 1. 配置区 ---
 BASE_IMAGE_PATH = r"E:\Touch-Vision-Language-Dataset\tvl_dataset\ssvtp"
-TEST_CSV_PATH = 'test5.csv'  # 确保使用包含'tactile'列的完整测试文件
+TEST_CSV_PATH = 'test.csv'  # 确保使用包含'tactile'列的完整测试文件
 RAW_OUTPUT_CSV = "evaluation_predictions_raw.csv"
 
 
@@ -75,6 +75,7 @@ def run_predictions_only():
                     "baseline_output": "ERROR",
                     "five_shot_output": "ERROR"
                 })
+            time.sleep(61)
 
 
 
