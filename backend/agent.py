@@ -15,6 +15,7 @@ from prompt_templates import (
 )
 from config import TOGETHER_API_KEY, TOGETHER_MODEL_NAME, TOGETHER_BASE_URL
 import re
+import numpy as np
 
 # --- NEW HELPER FUNCTION ---
 def image_to_base64(image_path: str) -> Optional[str]:
@@ -79,6 +80,16 @@ class MultimodalAgent:
         )
         self.num_shots = num_shots
         self.graph = self._build_graph()
+
+        # --- 新增部分：加载并格式化 word list ---
+        try:
+            word_array = np.load('word_list.npy', allow_pickle=True)
+            # 将 numpy 数组转换为一个逗号分隔的字符串
+            self.word_list_str = ", ".join(word_array)
+        except FileNotFoundError:
+            print("Warning: 'word_list.npy' not found. Prompt will not include the word list constraint.")
+            self.word_list_str = "not available"
+
 
         if self.num_shots > 0:
             # --- HARDCODED 5-SHOT EXAMPLES ---
@@ -306,7 +317,8 @@ class MultimodalAgent:
             for example in examples_to_use:  # <-- 改为遍历切片后的列表
                 # For each example, use the standard, strengthened TASK_PROMPT as the instruction
                 # The 'question' field can be a generic placeholder since it's just an example
-                example_prompt_text = TASK_PROMPT_TACTILE.format(question="Analyze the following example.")
+                example_prompt_text = TASK_PROMPT_TACTILE.format(question="Analyze the following example.",
+            word_list=self.word_list_str)
                 
                 example_image_b64 = image_to_base64(example["tactile_path"])
                 if not example_image_b64:
@@ -325,7 +337,7 @@ class MultimodalAgent:
         # 2. Add the actual user query at the end
         user_image_b64 = state["tactile_image"]
         # The final task prompt uses the optimized question from the previous step
-        task_prompt = TASK_PROMPT_TACTILE.format(question=state["optimized_question"])
+        task_prompt = TASK_PROMPT_TACTILE.format(question=state["optimized_question"],word_list=self.word_list_str)  # <-- 将加载好的字符串传入
 
         task_content = [{"type": "text", "text": task_prompt}]
         if user_image_b64:
@@ -348,7 +360,8 @@ class MultimodalAgent:
             for example in examples_to_use:  # <-- 改为遍历切片后的列表
                 # For each example, use the standard, strengthened TASK_PROMPT as the instruction
                 # The 'question' field can be a generic placeholder since it's just an example
-                example_prompt_text = TASK_PROMPT_VISION.format(question="Analyze the following example.")
+                example_prompt_text = TASK_PROMPT_VISION.format(question="Analyze the following example.",
+            word_list=self.word_list_str)
                 
                 example_image_b64 = image_to_base64(example["vision_path"])
                 if not example_image_b64:
@@ -367,7 +380,7 @@ class MultimodalAgent:
         # 2. Add the actual user query at the end
         user_image_b64 = state["vision_image"]
         # The final task prompt uses the optimized question from the previous step
-        task_prompt = TASK_PROMPT_VISION.format(question=state["optimized_question"])
+        task_prompt = TASK_PROMPT_VISION.format(question=state["optimized_question"],word_list=self.word_list_str)  # <-- 将加载好的字符串传入
 
         task_content = [{"type": "text", "text": task_prompt}]
         if user_image_b64:
@@ -393,7 +406,8 @@ class MultimodalAgent:
         if self.num_shots > 0:
             examples_to_use = self.few_shot_examples[:self.num_shots]
             for example in examples_to_use:  # <-- 改为遍历切片后的列表
-                example_prompt_text = TASK_PROMPT_COMBINED.format(question="Analyze the following example.")
+                example_prompt_text = TASK_PROMPT_COMBINED.format(question="Analyze the following example.",
+            word_list=self.word_list_str)
 
                 example_vision_b64 = image_to_base64(example["vision_path"])
                 example_tactile_b64 = image_to_base64(example["tactile_path"])
@@ -420,7 +434,7 @@ class MultimodalAgent:
         # 2. Add the actual user query at the end
         user_vision_b64 = state["vision_image"]
         user_tactile_b64 = state["tactile_image"]
-        task_prompt = TASK_PROMPT_COMBINED.format(question=state["optimized_question"])
+        task_prompt = TASK_PROMPT_COMBINED.format(question=state["optimized_question"],word_list=self.word_list_str)  # <-- 将加载好的字符串传入
 
         # --- 同样地，将用户的两张图也分开发送 ---
 

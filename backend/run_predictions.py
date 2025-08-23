@@ -53,7 +53,7 @@ def run_predictions_only():
                     "Describe tactile properties.", mode=mode,
                     vision_image=vision_input, tactile_image=tactile_input
                 )['response']
-
+                time.sleep(31)
                 fiveshot_pred = five_shot_agent.process_request(
                     "Describe tactile properties.", mode=mode,
                     vision_image=vision_input, tactile_image=tactile_input
@@ -75,7 +75,7 @@ def run_predictions_only():
                     "baseline_output": "ERROR",
                     "five_shot_output": "ERROR"
                 })
-            time.sleep(61)
+            time.sleep(31)
 
 
 
