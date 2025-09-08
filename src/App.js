@@ -40,7 +40,7 @@ function App() {
       return;
     }
 
-    // 检查模式所需的图像是否已上传
+    // Check if required images for the mode have been uploaded
     if (selectedMode === 'tactile' && !tactileImage) {
       alert('Tactile mode requires a tactile image. Please upload one first.');
       return;
@@ -96,11 +96,11 @@ function App() {
         }
       });
       
-      // 显示更详细的错误信息
+      // Display more detailed error information
       let errorMessage = 'Error generating response. ';
       
       if (error.response) {
-        // 服务器返回了错误状态码
+        // Server returned error status code
         if (error.response.status === 400) {
           errorMessage += error.response.data.detail || 'Invalid request data.';
         } else if (error.response.status === 404) {
@@ -111,10 +111,10 @@ function App() {
           errorMessage += `Server error (${error.response.status}): ${error.response.statusText || 'Unknown error'}`;
         }
       } else if (error.request) {
-        // 请求已发出但没有收到响应
+        // Request was sent but no response received
         errorMessage += 'No response from server. Please check if backend is running.';
       } else {
-        // 其他错误
+        // Other errors
         errorMessage += error.message || 'Unknown error occurred.';
       }
       

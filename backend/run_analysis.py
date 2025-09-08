@@ -7,19 +7,19 @@ import torch
 import nltk
 from tqdm import tqdm
 
-# 评测指标库
+# Evaluation metrics libraries
 from bert_score import BERTScorer
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge_score import rouge_scorer
 
-# --- 1. 配置区 ---
+# --- 1. Configuration Section ---
 RAW_PREDICTIONS_CSV = "evaluation_predictions_raw.csv"
 FINAL_RESULTS_CSV = "evaluation_results_detailed.csv"
 
 
-# --- 2. 辅助函数 ---
+# --- 2. Helper Functions ---
 def calculate_keyword_recall(candidate_str: str, reference_str: str) -> float:
-    """计算生成结果中包含了多少标准答案里的关键词"""
+    """Calculate how many keywords from the reference answer are included in the generated result"""
     if not isinstance(candidate_str, str) or not isinstance(reference_str, str):
         return 0.0
     ref_keywords = set([kw.strip() for kw in reference_str.split(',') if kw.strip()])
@@ -32,10 +32,10 @@ def calculate_keyword_recall(candidate_str: str, reference_str: str) -> float:
     return len(matched_keywords) / len(ref_keywords)
 
 
-# --- 3. 主分析函数 ---
+# --- 3. Main Analysis Function ---
 def run_analysis_from_file():
     """
-    从原始预测文件中读取数据，并执行所有指标计算、统计分析和可视化。
+    Read data from raw prediction files and execute all metric calculations, statistical analysis, and visualization.
     """
     print("--- Step 1: Loading Resources for Analysis ---")
     if torch.cuda.is_available():
@@ -64,11 +64,11 @@ def run_analysis_from_file():
 
     print("--- Step 2: Calculating Detailed Metrics ---")
 
-    # 如果在CPU上运行，使用一个安全的batch_size。在GPU上，可以处理更大的批次。
+    # If running on CPU, use a safe batch_size. On GPU, larger batches can be processed.
     batch_size = 1 if device == 'cpu' else 32
     print(f"Using batch_size={batch_size} for BERTScore calculation on {device}.")
 
-    # 过滤掉出错的行以进行评分
+    # Filter out error rows for scoring
     valid_results_df = results_df[results_df['baseline_output'] != 'ERROR'].copy()
 
     if not valid_results_df.empty:

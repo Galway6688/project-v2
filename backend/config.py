@@ -8,7 +8,7 @@ TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "0440017c7e550247f094a703e2f4b5
 TOGETHER_MODEL_NAME = os.getenv("TOGETHER_MODEL_NAME", "meta-llama/Llama-4-Scout-17B-16E-Instruct")
 TOGETHER_BASE_URL = os.getenv("TOGETHER_BASE_URL", "https://api.together.xyz/v1")
 
-# 确保Together AI的配置正确
+# Ensure Together AI configuration is correct
 print(f"Using Together AI - Model: {TOGETHER_MODEL_NAME}")
 print(f"Base URL: {TOGETHER_BASE_URL}")
 print(f"API Key: {TOGETHER_API_KEY[:10]}...")

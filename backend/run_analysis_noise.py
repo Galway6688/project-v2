@@ -1,4 +1,4 @@
-# run_analysis.py (最终、最全功能版)
+# run_analysis.py (Final, most comprehensive version)
 
 import pandas as pd
 import numpy as np
@@ -7,19 +7,19 @@ import torch
 import nltk
 from tqdm import tqdm
 
-# 评测指标库
+# Evaluation metrics libraries
 from bert_score import BERTScorer
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge_score import rouge_scorer
 
-# --- 1. 配置区 ---
+# --- 1. Configuration Section ---
 RAW_PREDICTIONS_CSV = "evaluation_predictions_raw.csv"
 FINAL_RESULTS_CSV = "evaluation_results_detailed.csv"
 
 
-# --- 2. 辅助函数 ---
+# --- 2. Helper Functions ---
 def calculate_keyword_recall(candidate_str: str, reference_str: str) -> float:
-    """计算生成结果中包含了多少标准答案里的关键词"""
+    """Calculate how many keywords from the reference answer are included in the generated result"""
     if not isinstance(candidate_str, str) or not isinstance(reference_str, str): return 0.0
     ref_keywords = set([kw.strip() for kw in reference_str.split(',') if kw.strip()])
     cand_keywords = set([kw.strip() for kw in candidate_str.split(',') if kw.strip()])
@@ -28,10 +28,10 @@ def calculate_keyword_recall(candidate_str: str, reference_str: str) -> float:
     return len(matched_keywords) / len(ref_keywords)
 
 
-# --- 3. 主分析函数 ---
+# --- 3. Main Analysis Function ---
 def run_analysis_from_file():
     """
-    从原始预测文件中读取数据，并执行所有指标计算、统计分析和可视化。
+    Read data from raw prediction files and execute all metric calculations, statistical analysis, and visualization.
     """
     print("--- Step 1: Loading Resources for Analysis ---")
     if torch.cuda.is_available():
@@ -62,13 +62,13 @@ def run_analysis_from_file():
 
     batch_size = 1 if device == 'cpu' else 32
 
-    # 过滤掉出错或为空的行
+    # Filter out error or empty rows
     valid_results_df = results_df.dropna(
         subset=['true_baseline_output', 'agent_baseline_output', 'four_shot_output']).copy()
     valid_results_df = valid_results_df[valid_results_df['true_baseline_output'] != 'ERROR'].copy()
 
     if not valid_results_df.empty:
-        # 为三组输出分别计算 BERTScore
+        # Calculate BERTScore separately for three groups of outputs
         _, _, F1_true_base = bert_scorer.score(valid_results_df['true_baseline_output'].tolist(),
                                                valid_results_df['ground_truth'].tolist(), batch_size=batch_size)
         _, _, F1_agent_base = bert_scorer.score(valid_results_df['agent_baseline_output'].tolist(),
@@ -80,7 +80,7 @@ def run_analysis_from_file():
         valid_results_df['agent_baseline_bert_f1'] = F1_agent_base.numpy()
         valid_results_df['four_shot_bert_f1'] = F1_4shot.numpy()
 
-        # --- 核心改动点：恢复为所有三组模型计算所有详细指标 ---
+        # --- Core modification: restore detailed metrics calculation for all three groups of models ---
         other_metrics = []
         for index, row in tqdm(valid_results_df.iterrows(), total=len(valid_results_df),
                                desc="Calculating other metrics"):
@@ -110,7 +110,7 @@ def run_analysis_from_file():
         other_metrics_df = pd.DataFrame(other_metrics, index=valid_results_df.index)
         results_df = valid_results_df.merge(other_metrics_df, left_index=True, right_index=True, how="left")
 
-        # 保存包含所有指标的详细结果
+        # Save detailed results containing all metrics
         results_df.to_csv(FINAL_RESULTS_CSV, index=False, encoding='utf-8-sig')
         print(f"Detailed results saved to '{FINAL_RESULTS_CSV}'")
     else:
@@ -124,7 +124,7 @@ def run_analysis_from_file():
         if mode_df.empty: continue
         print(f"\n----- Statistical Summary for MODE: {mode.upper()} -----")
 
-        # --- 核心改动点：恢复完整的统计表格 ---
+        # --- Core modification: restore complete statistical table ---
         stats = {
             "Metric": ["BERT-F1", "BLEU", "ROUGE-L-F1", "KW-Recall"],
             "True Baseline Mean": [
@@ -143,7 +143,7 @@ def run_analysis_from_file():
         stats_df = pd.DataFrame(stats)
         print(stats_df.to_string(index=False))
 
-        # 可视化部分不变，仍然只对比最重要的BERT-F1分数
+        # Visualization section unchanged, still only comparing the most important BERT-F1 scores
         plt.figure(figsize=(10, 6))
         plt.boxplot([
             mode_df['true_baseline_bert_f1'].dropna(),

@@ -5,18 +5,18 @@ import os
 import time
 from tqdm import tqdm
 
-# 只导入 agent.py 中需要的部分
+# Only import the necessary parts from agent.py
 from agent import MultimodalAgent, image_to_base64
 
-# --- 1. 配置区 ---
+# --- 1. Configuration Section ---
 BASE_IMAGE_PATH = r"E:\Touch-Vision-Language-Dataset\tvl_dataset\ssvtp"
-TEST_CSV_PATH = 'test5.csv'  # 确保使用包含'tactile'列的完整测试文件
+TEST_CSV_PATH = 'test5.csv'  # Ensure using complete test file containing 'tactile' column
 RAW_OUTPUT_CSV = "evaluation_predictions_raw.csv"
 
 
 def run_predictions_only():
     """
-    只执行预测步骤，并将所有模型的原始输出结果保存到CSV。
+    Execute only the prediction steps and save all models' raw output results to CSV.
     """
     print("--- Step 1: Loading Resources ---")
     try:
@@ -26,9 +26,9 @@ def run_predictions_only():
         print(f"Error: {TEST_CSV_PATH} not found. Please ensure it's in the same directory.")
         return
 
-    print("Initializing agents (0-shot baseline and 4-shot agent)...")  # <-- 修改日志文本
+    print("Initializing agents (0-shot baseline and 4-shot agent)...")  # <-- Modified log text
     baseline_agent = MultimodalAgent(num_shots=0)
-    five_shot_agent = MultimodalAgent(num_shots=4)  # <-- 将这里的 5 改为 4
+    five_shot_agent = MultimodalAgent(num_shots=4)  # <-- Changed 5 to 4 here
     print("Agents initialized.\n")
 
     print("--- Step 2: Running Predictions for all modes ---")

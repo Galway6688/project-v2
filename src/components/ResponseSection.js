@@ -17,7 +17,7 @@ const ResponseSection = ({ response, loading, optimizedQuestion }) => {
           </div>
         ) : response ? (
           <div className="w-full space-y-4">
-            {/* 显示优化后的问题 */}
+            {/* Display optimized question */}
             {optimizedQuestion && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
@@ -36,7 +36,7 @@ const ResponseSection = ({ response, loading, optimizedQuestion }) => {
               </div>
             )}
             
-            {/* 显示AI回答 */}
+            {/* Display AI response */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">

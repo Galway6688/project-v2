@@ -13,14 +13,14 @@ BASE_IMAGE_PATH = r"E:\Touch-Vision-Language-Dataset\tvl_dataset\ssvtp"
 def run_evaluation_for_mode(mode_to_test: str, test_df: pd.DataFrame, baseline_agent: MultimodalAgent,
                             five_shot_agent: MultimodalAgent, scorer: BERTScorer):
     """
-    为指定的单一模式执行评测流程，并使用已加载的 scorer。
+    Execute evaluation process for a specified single mode, using the loaded scorer.
     """
     print(f"\n--- Starting Evaluation for MODE: {mode_to_test.upper()} ---")
 
     results = []
 
     for index, row in tqdm(test_df.iterrows(), total=len(test_df), desc=f"Evaluating {mode_to_test}"):
-        # ... (这部分循环逻辑和之前完全一样，无需改动) ...
+        # ... (This loop logic is exactly the same as before, no changes needed) ...
         vision_image_path = os.path.join(BASE_IMAGE_PATH, row['url'].replace('/', '\\'))
         tactile_image_path = os.path.join(BASE_IMAGE_PATH, row['tactile'].replace('/', '\\'))
         ground_truth = str(row['caption'])
@@ -75,7 +75,7 @@ def run_evaluation_for_mode(mode_to_test: str, test_df: pd.DataFrame, baseline_a
         references = valid_results_df['ground_truth'].tolist()
 
         print(f"Calculating BERTScore for mode '{mode_to_test}' using pre-loaded model...")
-        # <-- 修改点：使用 scorer.score() 方法，而不是 score() 函数 -->
+        # <-- Modification: use scorer.score() method instead of score() function -->
         P_base, R_base, F1_base = scorer.score(candidates_baseline, references)
         P_5shot, R_5shot, F1_5shot = scorer.score(candidates_five_shot, references)
 
@@ -89,7 +89,7 @@ def run_evaluation_for_mode(mode_to_test: str, test_df: pd.DataFrame, baseline_a
 
 def main_evaluation():
     """
-    主函数，加载所有资源（包括裁判模型），然后开始评测。
+    Main function that loads all resources (including judge models), then starts evaluation.
     """
     try:
         test_df = pd.read_csv('test.csv')
@@ -103,7 +103,7 @@ def main_evaluation():
     five_shot_agent = MultimodalAgent(num_shots=5)
     print("Agents initialized.")
 
-    # <-- 新增部分：在这里一次性加载（或下载）裁判模型 -->
+    # <-- New section: load (or download) judge model once here -->
     print("\nLoading/Downloading BERTScore model (This is a one-time process)...")
     scorer = BERTScorer(model_type='microsoft/deberta-xlarge-mnli', lang='en')
     print("BERTScore model loaded successfully.\n")
@@ -111,7 +111,7 @@ def main_evaluation():
     modes_to_evaluate = ['combined', 'vision', 'tactile']
 
     for mode in modes_to_evaluate:
-        # <-- 修改点：将加载好的 scorer 传递给评测函数 -->
+        # <-- Modification: pass the loaded scorer to the evaluation function -->
         run_evaluation_for_mode(mode, test_df, baseline_agent, five_shot_agent, scorer)
 
     print("\nAll evaluation modes are complete.")

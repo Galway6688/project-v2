@@ -303,7 +303,7 @@ class MultimodalAgent:
         # 1. Loop through all fixed few-shot examples (only if num_shots > 0)
         if self.num_shots > 0:
             examples_to_use = self.few_shot_examples[:self.num_shots]
-            for example in examples_to_use:  # <-- 改为遍历切片后的列表
+            for example in examples_to_use:  # <-- Changed to iterate over sliced list
                 # For each example, use the standard, strengthened TASK_PROMPT as the instruction
                 # The 'question' field can be a generic placeholder since it's just an example
                 example_prompt_text = TASK_PROMPT_TACTILE.format(question="Analyze the following example.")
@@ -345,7 +345,7 @@ class MultimodalAgent:
         # 1. Loop through all fixed few-shot examples (only if num_shots > 0)
         if self.num_shots > 0:
             examples_to_use = self.few_shot_examples[:self.num_shots]
-            for example in examples_to_use:  # <-- 改为遍历切片后的列表
+            for example in examples_to_use:  # <-- Changed to iterate over sliced list
                 # For each example, use the standard, strengthened TASK_PROMPT as the instruction
                 # The 'question' field can be a generic placeholder since it's just an example
                 example_prompt_text = TASK_PROMPT_VISION.format(question="Analyze the following example.")
@@ -378,7 +378,7 @@ class MultimodalAgent:
         print(f"Built {len(messages_list)} separate messages for the final prompt.")
         return state
 
-    # 请用这个修正版的函数，替换您 agent.py 中现有的 _combined_prompt_builder
+    # Please use this corrected version of the function to replace the existing _combined_prompt_builder in your agent.py
 
     def _combined_prompt_builder(self, state: AgentState) -> AgentState:
         """
@@ -392,22 +392,22 @@ class MultimodalAgent:
         # 1. Loop through all fixed few-shot examples
         if self.num_shots > 0:
             examples_to_use = self.few_shot_examples[:self.num_shots]
-            for example in examples_to_use:  # <-- 改为遍历切片后的列表
+            for example in examples_to_use:  # <-- Changed to iterate over sliced list
                 example_prompt_text = TASK_PROMPT_COMBINED.format(question="Analyze the following example.")
 
                 example_vision_b64 = image_to_base64(example["vision_path"])
                 example_tactile_b64 = image_to_base64(example["tactile_path"])
 
-                # --- 这是核心改动：将图片分开发送 ---
+                # --- This is the core change: send images separately ---
 
-                # Message 1: 指令和第一张图 (视觉)
+                # Message 1: Instructions and first image (vision)
                 content_part1 = [
                     {"type": "text", "text": example_prompt_text},
                     {"type": "image_url", "image_url": {"url": example_vision_b64}}
                 ]
                 messages_list.append(HumanMessage(content=content_part1))
 
-                # Message 2: 提示语和第二张图 (触感)
+                # Message 2: Prompt and second image (tactile)
                 content_part2 = [
                     {"type": "text", "text": "Here is the corresponding tactile data:"},
                     {"type": "image_url", "image_url": {"url": example_tactile_b64}}
@@ -422,7 +422,7 @@ class MultimodalAgent:
         user_tactile_b64 = state["tactile_image"]
         task_prompt = TASK_PROMPT_COMBINED.format(question=state["optimized_question"])
 
-        # --- 同样地，将用户的两张图也分开发送 ---
+        # --- Similarly, send user's two images separately ---
 
         # Message with instruction and user's vision image
         task_content_vision = [

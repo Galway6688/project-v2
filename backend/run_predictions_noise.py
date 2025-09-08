@@ -1,4 +1,4 @@
-# run_predictions.py (最终修正版：修复了 True Baseline 的图片输入逻辑)
+# run_predictions.py (Final corrected version: fixed True Baseline image input logic)
 
 import pandas as pd
 import os
@@ -10,7 +10,7 @@ from agent import MultimodalAgent, image_to_base64
 from langchain_core.messages import HumanMessage
 from noisy_questions import NOISY_QUESTIONS
 
-# --- 1. 配置区 ---
+# --- 1. Configuration Section ---
 BASE_IMAGE_PATH = r"E:\Touch-Vision-Language-Dataset\tvl_dataset\ssvtp"
 TEST_CSV_PATH = 'test.csv'
 RAW_OUTPUT_CSV = "evaluation_predictions_raw.csv"
@@ -51,14 +51,14 @@ def run_final_experiment():
                 tactile_input = image_to_base64(tactile_path)
 
             try:
-                # --- 核心改动点：修正 True Baseline 的 prompt 构建逻辑 ---
+                # --- Core modification: fix True Baseline prompt construction logic ---
                 simple_prompt_text = f"Based on the image(s), list the key tactile attributes as a comma-separated list. My question is: {noisy_question}"
                 true_baseline_messages = []
 
-                # 创建第一条消息，包含指令
+                # Create first message containing instructions
                 content_part1 = [{"type": "text", "text": simple_prompt_text}]
 
-                # 根据模式，决定在第一条消息中附加哪张图片
+                # Based on mode, decide which image to attach in the first message
                 if mode == 'vision':
                     if vision_input: content_part1.append({"type": "image_url", "image_url": {"url": vision_input}})
                 elif mode == 'tactile':
@@ -68,7 +68,7 @@ def run_final_experiment():
 
                 true_baseline_messages.append(HumanMessage(content=content_part1))
 
-                # 只有在 combined 模式下，才需要创建第二条消息来发送第二张图片
+                # Only in combined mode, need to create second message to send second image
                 if mode == 'combined' and tactile_input:
                     content_part2 = [{"type": "text", "text": "And here is the corresponding tactile data:"}]
                     content_part2.append({"type": "image_url", "image_url": {"url": tactile_input}})
@@ -76,7 +76,7 @@ def run_final_experiment():
 
                 true_baseline_pred = agent_baseline.llm.invoke(true_baseline_messages).content.strip()
 
-                # --- (Agent Baseline 和 4-Shot Agent 的调用逻辑不变) ---
+                # --- (Agent Baseline and 4-Shot Agent call logic unchanged) ---
                 agent_baseline_pred = \
                 agent_baseline.process_request(question=noisy_question, mode=mode, vision_image=vision_input,
                                                tactile_image=tactile_input)['response']

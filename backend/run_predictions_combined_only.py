@@ -5,21 +5,21 @@ import os
 import time
 from tqdm import tqdm
 
-# 确保 agent.py 和此脚本在同一目录下
+# Ensure agent.py and this script are in the same directory
 from agent import MultimodalAgent, image_to_base64
 
-# --- 1. 配置区 ---
+# --- 1. Configuration Section ---
 BASE_IMAGE_PATH = r"E:\Touch-Vision-Language-Dataset\tvl_dataset\ssvtp"
-TEST_CSV_PATH = 'test.csv'  # 您的完整测试集描述文件
-ORIGINAL_RAW_CSV = "evaluation_predictions_raw.csv"  # 上次运行生成的、需要被补齐的文件
-TEMP_COMBINED_CSV = "combined_results_temp.csv"  # 用于临时存储combined结果的文件
+TEST_CSV_PATH = 'test.csv'  # Your complete test set description file
+ORIGINAL_RAW_CSV = "evaluation_predictions_raw.csv"  # File generated from previous run that needs to be completed
+TEMP_COMBINED_CSV = "combined_results_temp.csv"  # File for temporarily storing combined results
 
 
 def run_combined_and_merge():
     """
-    只执行 'combined' 模式的预测，然后将结果合并回主要的原始预测文件中。
+    Execute predictions only for 'combined' mode, then merge results back into the main raw prediction file.
     """
-    # --- Part 1: 只运行 Combined 模式的预测 ---
+    # --- Part 1: Run predictions for Combined mode only ---
     print("--- Part 1: Running Predictions for COMBINED mode only ---")
 
     try:
@@ -34,7 +34,7 @@ def run_combined_and_merge():
     print("Agents initialized.\n")
 
     combined_results = []
-    mode = 'combined'  # 只跑 combined 模式
+    mode = 'combined'  # Only run combined mode
 
     print(f"--- Predicting for MODE: {mode.upper()} ---")
     for index, row in tqdm(test_df.iterrows(), total=len(test_df), desc=f"Mode: {mode}"):
@@ -66,29 +66,29 @@ def run_combined_and_merge():
                 "mode": mode, "vision_path": row['url'], "ground_truth": ground_truth,
                 "baseline_output": "ERROR", "five_shot_output": "ERROR"
             })
-        time.sleep(21)  # 避免速率超限
+        time.sleep(21)  # Avoid rate limiting
 
     temp_df = pd.DataFrame(combined_results)
     temp_df.to_csv(TEMP_COMBINED_CSV, index=False, encoding='utf-8-sig')
     print(f"\n✅ '{mode.upper()}' mode predictions are complete and saved to temporary file '{TEMP_COMBINED_CSV}'.")
 
-    # --- Part 2: 合并结果到主文件中 ---
+    # --- Part 2: Merge results into main file ---
     print(f"\n--- Part 2: Merging new results into '{ORIGINAL_RAW_CSV}' ---")
 
     try:
         original_df = pd.read_csv(ORIGINAL_RAW_CSV)
         new_combined_df = pd.read_csv(TEMP_COMBINED_CSV)
 
-        # 1. 从原始结果中，筛选出所有非 'combined' 模式的行
+        # 1. Filter out all non-'combined' mode rows from original results
         other_modes_df = original_df[original_df['mode'] != 'combined']
 
-        # 2. 将筛选出的旧结果和新的 'combined' 结果合并
+        # 2. Merge filtered old results with new 'combined' results
         final_df = pd.concat([other_modes_df, new_combined_df], ignore_index=True)
 
-        # 3. 按原始顺序排序（如果需要的话）
+        # 3. Sort by original order (if needed)
         final_df = final_df.sort_values(by=['vision_path', 'mode']).reset_index(drop=True)
 
-        # 4. 覆盖保存回主文件
+        # 4. Overwrite and save back to main file
         final_df.to_csv(ORIGINAL_RAW_CSV, index=False, encoding='utf-8-sig')
 
         print(f"✅ Successfully merged results. '{ORIGINAL_RAW_CSV}' is now complete and updated.")
@@ -99,7 +99,7 @@ def run_combined_and_merge():
     except Exception as e:
         print(f"An error occurred during merging: {e}")
     finally:
-        # 5. 删除临时文件
+        # 5. Delete temporary file
         if os.path.exists(TEMP_COMBINED_CSV):
             os.remove(TEMP_COMBINED_CSV)
             print(f"Temporary file '{TEMP_COMBINED_CSV}' has been deleted.")

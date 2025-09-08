@@ -1,4 +1,4 @@
-# evaluation.py (最终优化版：优先使用GPU，并保存中间进度)
+# evaluation.py (Final optimized version: prioritizes GPU usage and saves intermediate progress)
 
 import pandas as pd
 import os
@@ -9,24 +9,24 @@ from tqdm import tqdm
 import torch
 import nltk
 
-# 评测指标库
+# Evaluation metrics libraries
 from bert_score import BERTScorer
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge_score import rouge_scorer
 
-# 您的 Agent 脚本
-# 确保 agent.py 和此脚本在同一目录下
+# Your Agent script
+# Ensure agent.py and this script are in the same directory
 from agent import MultimodalAgent, image_to_base64
 
-# --- 1. 配置区 ---
-# 请在此处确认您的文件路径
+# --- 1. Configuration Section ---
+# Please confirm your file paths here
 BASE_IMAGE_PATH = r"E:\Touch-Vision-Language-Dataset\tvl_dataset\ssvtp"
-TEST_CSV_PATH = 'test.csv'  # 确保使用包含'tactile'列的、修正后的完整测试文件
+TEST_CSV_PATH = 'test.csv'  # Ensure using the corrected complete test file containing 'tactile' column
 
 
-# --- 2. 辅助函数 ---
+# --- 2. Helper Functions ---
 def calculate_keyword_recall(candidate_str: str, reference_str: str) -> float:
-    """计算生成结果中包含了多少标准答案里的关键词"""
+    """Calculate how many keywords from the reference answer are included in the generated result"""
     if not isinstance(candidate_str, str) or not isinstance(reference_str, str):
         return 0.0
     ref_keywords = set([kw.strip() for kw in reference_str.split(',') if kw.strip()])
@@ -39,15 +39,15 @@ def calculate_keyword_recall(candidate_str: str, reference_str: str) -> float:
     return len(matched_keywords) / len(ref_keywords)
 
 
-# --- 3. 主评测函数 ---
+# --- 3. Main Evaluation Function ---
 def run_full_evaluation():
     """
-    执行专为毕业设计报告设计的、完整且详细的评测流程。
+    Execute a comprehensive and detailed evaluation process designed specifically for the graduation thesis report.
     """
-    # 步骤 3.1: 加载所有资源
+    # Step 3.1: Load all resources
     print("--- Step 1: Loading Resources ---")
 
-    # 自动检测并设置计算设备 (GPU优先)
+    # Automatically detect and set compute device (GPU priority)
     if torch.cuda.is_available():
         device = 'cuda:0'
         print(f"✅ Found available GPU. Using device: {device}")
@@ -74,13 +74,13 @@ def run_full_evaluation():
         print("Downloading NLTK 'punkt' model...")
         nltk.download('punkt')
 
-    # 将检测到的 device 传递给 BERTScorer，强制其使用GPU
+    # Pass the detected device to BERTScorer, forcing it to use GPU
     bert_scorer = BERTScorer(model_type='microsoft/deberta-xlarge-mnli', lang='en', device=device)
     rouge = rouge_scorer.RougeScorer(['rouge1', 'rougeL'], use_stemmer=True)
     chencherry = SmoothingFunction()
     print("Evaluation models loaded and set to run on designated device.\n")
 
-    # 步骤 3.2: 运行预测
+    # Step 3.2: Run predictions
     print("--- Step 2: Running Predictions for all modes ---")
     all_results = []
     modes_to_evaluate = ['combined', 'vision', 'tactile']
@@ -117,20 +117,20 @@ def run_full_evaluation():
             except Exception as e:
                 print(f"Error on row {index}, mode {mode}: {e}")
 
-            # 如果遇到 API 速率限制错误，可以取消下面这行的注释
+            # If you encounter API rate limit errors, uncomment the line below
             # time.sleep(21)
 
     results_df = pd.DataFrame(all_results)
 
-    # 在计算指标前，立即保存原始预测结果，确保进度不丢失
+    # Immediately save raw prediction results before calculating metrics to ensure progress is not lost
     raw_output_filename = "evaluation_predictions_raw.csv"
     results_df.to_csv(raw_output_filename, index=False, encoding='utf-8-sig')
     print(f"\n✅ Raw predictions saved to '{raw_output_filename}' as a backup.")
 
-    # 步骤 3.3: 计算各项详细指标
+    # Step 3.3: Calculate detailed metrics
     print("\n--- Step 3: Calculating Detailed Metrics for All Samples (on GPU) ---")
 
-    # 因为使用GPU，内存通常足够，一般不再需要batch_size。如果GPU显存依然不足，可以再加回来。
+    # Since we're using GPU, memory is usually sufficient, so batch_size is generally no longer needed. If GPU memory is still insufficient, it can be added back.
     P_base, R_base, F1_base = bert_scorer.score(results_df['baseline_output'].tolist(),
                                                 results_df['ground_truth'].tolist())
     P_5shot, R_5shot, F1_5shot = bert_scorer.score(results_df['five_shot_output'].tolist(),
@@ -160,14 +160,14 @@ def run_full_evaluation():
     other_metrics_df = pd.DataFrame(other_metrics, index=results_df.index)
     results_df = pd.concat([results_df, other_metrics_df], axis=1)
 
-    # 计算分数提升
+    # Calculate score improvement
     results_df['bert_f1_improvement'] = results_df['five_shot_bert_f1'] - results_df['baseline_bert_f1']
 
     output_filename = "evaluation_results_detailed.csv"
     results_df.to_csv(output_filename, index=False, encoding='utf-8-sig')
     print(f"Detailed results for all modes saved to {output_filename}")
 
-    # 步骤 3.4: 生成统计总结和可视化
+    # Step 3.4: Generate statistical summary and visualization
     print("\n--- Step 4: Generating Statistical Summary & Visualization ---")
 
     for mode in modes_to_evaluate:
@@ -195,7 +195,7 @@ def run_full_evaluation():
         stats_df = pd.DataFrame(stats)
         print(stats_df.to_string(index=False))
 
-        # 可视化
+        # Visualization
         plt.figure(figsize=(8, 6))
         plt.boxplot([mode_df['baseline_bert_f1'].dropna(), mode_df['five_shot_bert_f1'].dropna()],
                     labels=['Zero-Shot Baseline', '5-Shot Agent'])
@@ -211,6 +211,6 @@ def run_full_evaluation():
     print("\nAll tasks complete. Your detailed analysis is ready!")
 
 
-# --- 4. 脚本入口 ---
+# --- 4. Script Entry Point ---
 if __name__ == '__main__':
     run_full_evaluation()
