@@ -2,30 +2,45 @@ import React from 'react';
 
 const Navbar = () => {
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
-      <div className="container mx-auto px-4 py-4">
+    <nav className="glass-effect border-b border-white/20 sticky top-0 z-50">
+      <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo and App Name */}
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">AI</span>
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-secondary rounded-2xl flex items-center justify-center shadow-glow">
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent-500 rounded-full animate-pulse"></div>
             </div>
-            <h1 className="text-xl font-semibold text-gray-900">Interactive Multimodal GPT</h1>
+            <div>
+              <h1 className="text-2xl font-bold gradient-text">
+                Interactive Multimodal GPT
+              </h1>
+              <p className="text-xs text-neutral-500 font-medium">
+                Advanced AI Reasoning Across Modalities
+              </p>
+            </div>
           </div>
           
           {/* Navigation Links */}
-          <div className="flex items-center space-x-6">
-            <a href="#dashboard" className="text-gray-600 hover:text-gray-900 font-medium">
-              Dashboard
-            </a>
-            <a href="#history" className="text-gray-600 hover:text-gray-900 font-medium">
-              History
-            </a>
-            <a href="#settings" className="text-gray-600 hover:text-gray-900 font-medium">
-              Settings
-            </a>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-              Get Started
+          <div className="hidden md:flex items-center space-x-8">
+            <div className="flex items-center space-x-3">
+              <button className="btn-primary text-sm">
+                <span>✨</span>
+                <span>New Analysis</span>
+              </button>
+            </div>
+          </div>
+          
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <button className="p-2 text-neutral-600 hover:text-neutral-800">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
           </div>
         </div>

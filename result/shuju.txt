@@ -1,0 +1,44 @@
+(.venv) PS E:\python project\projectagent\backend> python run_analysis_noise.py   
+--- Step 1: Loading Resources for Analysis ---
+⚠️ No GPU found. Using device: cpu.
+Successfully loaded raw predictions from 'evaluation_predictions_raw.csv'.
+Loading evaluation models...
+Evaluation models loaded.
+
+--- Step 2: Calculating Detailed Metrics ---
+Calculating other metrics: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 138/138 [00:00<00:00, 1862.98it/s]
+Detailed results saved to 'evaluation_results_detailed.csv'
+
+--- Step 3: Generating Statistical Summary & Visualization ---
+
+----- Statistical Summary for MODE: COMBINED -----
+    Metric  True Baseline Mean  Agent Baseline (0-Shot) Mean  4-Shot Agent Mean
+   BERT-F1            0.633531                      0.658091           0.674712
+      BLEU            0.022911                      0.023297           0.026848
+ROUGE-L-F1            0.176132                      0.135266           0.169082
+ KW-Recall            0.186594                      0.190217           0.235507
+E:\python project\projectagent\backend\run_analysis_noise.py:148: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.
+  plt.boxplot([
+3-way comparison plot saved to score_distribution_3-way_combined.png
+
+----- Statistical Summary for MODE: VISION -----
+    Metric  True Baseline Mean  Agent Baseline (0-Shot) Mean  4-Shot Agent Mean
+   BERT-F1            0.629190                      0.681423           0.666077
+      BLEU            0.019229                      0.026138           0.021379
+ROUGE-L-F1            0.153226                      0.163164           0.140700
+ KW-Recall            0.166667                      0.201087           0.182971
+E:\python project\projectagent\backend\run_analysis_noise.py:148: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.
+  plt.boxplot([
+3-way comparison plot saved to score_distribution_3-way_vision.png
+
+----- Statistical Summary for MODE: TACTILE -----
+    Metric  True Baseline Mean  Agent Baseline (0-Shot) Mean  4-Shot Agent Mean
+   BERT-F1            0.526445                      0.630466           0.645517
+      BLEU            0.000259                      0.012848           0.021687
+ROUGE-L-F1            0.038681                      0.118961           0.128623
+ KW-Recall            0.039855                      0.123188           0.164855
+E:\python project\projectagent\backend\run_analysis_noise.py:148: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.
+  plt.boxplot([
+3-way comparison plot saved to score_distribution_3-way_tactile.png
+
+All tasks complete.

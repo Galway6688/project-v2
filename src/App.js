@@ -135,36 +135,53 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-surface">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main className="container mx-auto px-6 py-12 space-y-12 max-w-7xl">
+        {/* Hero Section */}
+        <div className="text-center space-y-4 mb-16">
+          <h1 className="text-4xl md:text-5xl font-bold gradient-text">
+            AI-Powered Multimodal Analysis
+          </h1>
+          <p className="text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+            Experience cutting-edge AI that understands tactile, visual, and textual data to provide 
+            intelligent insights and comprehensive analysis.
+          </p>
+        </div>
+
         {/* Data Input Section */}
-        <DataInputSection
-          tactileImage={tactileImage}
-          setTactileImage={setTactileImage}
-          visualImage={visualImage}
-          setVisualImage={setVisualImage}
-          textInput={textInput}
-          setTextInput={setTextInput}
-        />
+        <div className="animate-fade-in">
+          <DataInputSection
+            tactileImage={tactileImage}
+            setTactileImage={setTactileImage}
+            visualImage={visualImage}
+            setVisualImage={setVisualImage}
+            textInput={textInput}
+            setTextInput={setTextInput}
+          />
+        </div>
 
         {/* Prompt Engineering & Controls */}
-        <ControlsSection
-          selectedMode={selectedMode}
-          setSelectedMode={setSelectedMode}
-          promptPreview={promptPreview}
-          onGenerate={handleGenerate}
-          onClear={handleClear}
-          loading={loading}
-        />
+        <div className="animate-fade-in">
+          <ControlsSection
+            selectedMode={selectedMode}
+            setSelectedMode={setSelectedMode}
+            promptPreview={promptPreview}
+            onGenerate={handleGenerate}
+            onClear={handleClear}
+            loading={loading}
+          />
+        </div>
 
         {/* AI Response Output */}
-        <ResponseSection 
-          response={response}
-          loading={loading}
-          optimizedQuestion={optimizedQuestion}
-        />
+        <div className="animate-fade-in">
+          <ResponseSection 
+            response={response}
+            loading={loading}
+            optimizedQuestion={optimizedQuestion}
+          />
+        </div>
       </main>
     </div>
   );
