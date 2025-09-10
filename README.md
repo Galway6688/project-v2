@@ -70,9 +70,9 @@ This application lets users upload tactile and visual images along with text que
 
 ### Configuration
 
-The app comes with pre-configured Together AI settings. To use your own API key, create `backend/.env`:
-
-```env
+The app comes with pre-configured Together AI settings. To use your own API key, go to the config.py file:
+and add the api key in the config.py
+```
 TOGETHER_API_KEY=your_api_key_here
 TOGETHER_MODEL_NAME=meta-llama/Llama-4-Scout-17B-16E-Instruct
 TOGETHER_BASE_URL=https://api.together.xyz/v1
