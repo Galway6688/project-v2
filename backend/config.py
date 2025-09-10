@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Together AI Configuration
-TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "0440017c7e550247f094a703e2f4b5cf804bfaa44c3c6b2c74c725c98de61fe4")
+TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", " ")#add your own api key here
 TOGETHER_MODEL_NAME = os.getenv("TOGETHER_MODEL_NAME", "meta-llama/Llama-4-Scout-17B-16E-Instruct")
 TOGETHER_BASE_URL = os.getenv("TOGETHER_BASE_URL", "https://api.together.xyz/v1")
 
