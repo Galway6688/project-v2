@@ -81,7 +81,7 @@ class MultimodalAgent:
         self.graph = self._build_graph()
 
         if self.num_shots > 0:
-            # --- HARDCODED 5-SHOT EXAMPLES ---
+            # --- HARDCODED 9-SHOT EXAMPLES ---
             # Based on the user-provided file list and train.csv
             # Assumes 'images_rgb' and 'images_tac' folders are in the same directory as the script.
             self.few_shot_examples = [
@@ -109,6 +109,26 @@ class MultimodalAgent:
                     "vision_path": "images_rgb/image_2492_rgb.jpg",
                     "tactile_path": "images_tac/image_2492_tac.jpg",
                     "caption": "mesh, flexible, coarse"
+                },
+                {
+                    "vision_path": "images_rgb/image_1082_rgb.jpg",
+                    "tactile_path": "images_tac/image_1082_tac.jpg",
+                    "caption": "flat, hard"  # TODO: Fill in caption
+                },
+                {
+                    "vision_path": "images_rgb/image_2_rgb.jpg",
+                    "tactile_path": "images_tac/image_2_tac.jpg",
+                    "caption": "fabric, grainy"  # TODO: Fill in caption
+                },
+                {
+                    "vision_path": "images_rgb/image_2355_rgb.jpg",
+                    "tactile_path": "images_tac/image_2355_tac.jpg",
+                    "caption": "fabric, lined"  # TODO: Fill in caption
+                },
+                {
+                    "vision_path": "images_rgb/image_3393_rgb.jpg",
+                    "tactile_path": "images_tac/image_3393_tac.jpg",
+                    "caption": "smooth, fabric"  # TODO: Fill in caption
                 }
             ]
     
